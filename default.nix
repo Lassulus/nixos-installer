@@ -160,22 +160,30 @@ in pkgs.writers.writeDashBin "nixos-installer" ''
     fi
   elif [ "$disk_layout" = "PLAIN" ]; then
     if [ "$bootloader" = "grub" ]; then
+      sgdisk -og "$dev"
       sgdisk -n 1:2048:4095 -c 1:"BIOS Boot Partition" -t 1:ef02 "$dev"
       sgdisk -n 2:4096:+1G -c 2:"EFI System Partition" -t 2:ef00 "$dev"
       sgdisk -n 3:0:0 -c 3:"root" -t 3:8300 "$dev"
+      mkfs.vfat "$dev"2
+      mkfs."$rootFS" "$dev"3
       mkdir -p /mnt
       mount "$dev"3 /mnt
       mkdir -p /mnt/boot
       mount "$dev"2 /mnt/boot
     elif [ "$bootloader" = "systemd" ]; then
+      sgdisk -og "$dev"
       sgdisk -n 1:0:+1G -c 1:"EFI System Partition" -t 1:ef00 "$dev"
       sgdisk -n 2:0:0 -c 2:"root" -t 3:8300 "$dev"
+      mkfs.vfat "$dev"1
+      mkfs."$rootFS" "$dev"2
       mkdir -p /mnt
       mount "$dev"2 /mnt
       mkdir -p /mnt/boot
       mount "$dev"1 /mnt/boot
     elif [ "$bootloader" = "grub_no-efi" ]; then
+      sgdisk -og "$dev"
       sgdisk -n 1:0:+1G -c 1:"root" -t 1:8300 "$dev"
+      mkfs."$rootFS" "$dev"1
       mkdir -p /mnt
       mount "$dev"1 /mnt
     fi
